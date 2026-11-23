@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches Found | Alliance University Lost &amp; Found</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .match-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .match-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .match-heading h2 {
+            color: var(--primary);
+            font-size: 19px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .match-items {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .match-item {
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: #f8fafc;
+        }
+
+        .match-item h3 {
+            margin-bottom: 12px;
+            color: var(--primary);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .match-photo {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            margin-bottom: 14px;
+            border: 1px solid var(--border-color);
+            background: #e2e8f0;
+        }
+
+        .match-owner {
+            display: block;
+            margin: -6px 0 14px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .match-item dl {
+            display: grid;
+            grid-template-columns: 100px minmax(0, 1fr);
+            gap: 10px;
+            margin: 0;
+            font-size: 13.5px;
+        }
+
+        .match-item dt {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .match-item dd {
+            margin: 0;
+            color: var(--text-main);
+            overflow-wrap: anywhere;
+        }
+
+        .match-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .match-actions button,
+        .match-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            padding: 0 18px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .match-actions button {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .match-actions button:hover {
+            background: var(--primary-hover);
+        }
+
+        .match-actions a.secondary {
+            background: white;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+
+        .match-actions a.secondary:hover {
+            background: var(--primary-light);
+        }
+
+        .match-notification {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .match-notification:last-child {
+            border-bottom: none;
+        }
+
+        .match-notification p {
+            margin: 0;
+            font-size: 13.5px;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .match-notification button {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: white;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .match-notification button:hover {
+            background: var(--primary-light);
+        }
+
+        @media (max-width: 750px) {
+            .match-items {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Lost &amp; Found Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="history.html" class="student-login">My Reports</a>
+            <button class="admin-login" id="logoutButton" type="button">Logout</button>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html" class="active" aria-current="page">Matches Found <span id="notificationBadge" style="display:none;"></span></a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html">Campus Map</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="container">
+
+        <div class="page-title">
+            <h1>Automated Matches Found</h1>
+            <p>Our intelligent system scans reported lost items against newly turned-in found items based on categories, locations, dates, and item keywords.</p>
+        </div>
+
+        <div id="matchesLoading" class="panel" style="padding:24px;text-align:center;color:var(--text-muted);">
+            Scanning for potential lost &amp; found matches...
+        </div>
+
+        <div id="matchesError" class="error-message" role="alert" style="display:none;"></div>
+
+        <div id="matchesEmpty" class="empty-state" style="display:none;">
+            <div class="empty-icon">🤝</div>
+            <h3>No Matches Found Yet</h3>
+            <p>When an item matching your reported category or keywords is submitted, it will be automatically paired and presented here.</p>
+        </div>
+
+        <section id="matchesList" aria-live="polite"></section>
+
+        <!-- NOTIFICATIONS SECTION -->
+        <section class="panel" style="margin-top: 30px;">
+            <div class="panel-heading">
+                <h2>Recent Portal Notifications</h2>
+            </div>
+            <div style="padding: 20px;">
+                <div id="matchesNotifications">
+                    <p id="notificationsEmpty" style="color:var(--text-muted);margin:0;">Loading notifications...</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University Lost &amp; Found Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="portal.js"></script>
+</body>
+</html>

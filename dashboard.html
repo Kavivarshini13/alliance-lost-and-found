@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard | Alliance University Lost &amp; Found</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .action-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .action-card-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+
+        .action-card-text h3 {
+            color: var(--primary);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .action-card-text p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Lost &amp; Found Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="history.html" class="student-login">My Reports</a>
+            <button class="admin-login" id="logoutButton" type="button">Logout</button>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html">Matches Found</a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html">Campus Map</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="container">
+
+        <div class="page-title">
+            <h1>Student Portal Dashboard</h1>
+            <p>Welcome to your personal lost-and-found management center.</p>
+        </div>
+
+        <div id="dashboardError" class="error-message" role="alert" style="display:none;"></div>
+
+        <!-- QUICK ACTION CARDS -->
+        <section class="dashboard-grid">
+            <a href="lost.html" class="action-card">
+                <div class="action-card-icon" style="background:#fee2e2;color:#dc2626;">🎒</div>
+                <div class="action-card-text">
+                    <h3>Report Lost Item</h3>
+                    <p>Submit item details for matching.</p>
+                </div>
+            </a>
+
+            <a href="found.html" class="action-card">
+                <div class="action-card-icon" style="background:#dcfce7;color:#16a34a;">📦</div>
+                <div class="action-card-text">
+                    <h3>Report Found Item</h3>
+                    <p>Help return belongings to fellow students.</p>
+                </div>
+            </a>
+
+            <a href="search.html" class="action-card">
+                <div class="action-card-icon" style="background:#eff6ff;color:#2563eb;">🔍</div>
+                <div class="action-card-text">
+                    <h3>Search All Items</h3>
+                    <p>Filter by category, date, or location.</p>
+                </div>
+            </a>
+
+            <a href="matches.html" class="action-card">
+                <div class="action-card-icon" style="background:#e0e7ff;color:#4338ca;">⚡</div>
+                <div class="action-card-text">
+                    <h3>Matches Found</h3>
+                    <p>Review newly paired reports.</p>
+                </div>
+            </a>
+        </section>
+
+        <!-- ACTIVITY OVERVIEW -->
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>Account Activity Overview</h2>
+            </div>
+            <div style="padding: 24px;">
+                <p id="dashboardSummary" style="font-size:14.5px;color:var(--text-main);margin:0;line-height:1.6;">
+                    Loading your activity summary...
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University Lost &amp; Found Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="portal.js"></script>
+</body>
+</html>

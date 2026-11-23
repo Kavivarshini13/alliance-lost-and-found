@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Dashboard | Alliance University Lost &amp; Found</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hidden {
+            display: none !important;
+        }
+
+        /* Admin Login Screen */
+        .admin-login-wrap {
+            min-height: calc(100vh - 180px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+
+        .admin-card {
+            width: min(460px, 94vw);
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .admin-card-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .admin-card-header .admin-badge-icon {
+            font-size: 38px;
+            margin-bottom: 8px;
+        }
+
+        .admin-card-header h1 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .admin-card-header p {
+            color: var(--text-muted);
+            font-size: 13.5px;
+        }
+
+        /* Admin Stats Bar */
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .admin-stat-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-stat-info h3 {
+            color: var(--text-muted);
+            font-size: 12.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .admin-stat-info .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* Admin Action Buttons in Tables */
+        td button {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--primary);
+            cursor: pointer;
+            margin: 2px 4px 2px 0;
+            transition: all 0.2s;
+        }
+
+        td button:hover {
+            background: var(--primary-light);
+        }
+
+        td select {
+            height: 32px;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            color: var(--text-main);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Administration Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="index.html" class="student-login">Student View</a>
+            <button class="admin-login" id="logoutBtn" type="button">Logout</button>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html">Matches Found</a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html">Campus Map</a>
+        <a href="admin.html" class="active" aria-current="page">Admin Panel</a>
+    </nav>
+
+    <!-- ================= SCREEN 1: ADMIN LOGIN ================= -->
+    <div id="loginScreen" class="admin-login-wrap">
+        <main class="admin-card">
+            <div class="admin-card-header">
+                <div class="admin-badge-icon">🔐</div>
+                <h1>Administrator Portal</h1>
+                <p>Sign in with verified Alliance University administrative credentials.</p>
+            </div>
+
+            <div id="errorMessage" class="error-message" role="alert"></div>
+
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminEmail">Administrator Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@alliance.edu.in" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminPassword">Admin Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter administrative password" required>
+                </div>
+
+                <button type="submit" class="auth-submit-btn">Authorize Admin Access</button>
+                <button type="button" id="demoAdminBtn" style="width:100%;height:40px;margin-top:10px;border:1px solid #cbd5e1;border-radius:var(--radius-sm);background:#f1f5f9;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                    ⚡ Demo Admin One-Click Sign In
+                </button>
+            </form>
+
+            <div style="margin-top:20px;text-align:center;">
+                <a href="login.html" style="font-size:13.5px;color:var(--text-muted);">&larr; Return to Student Login</a>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= SCREEN 2: ADMIN DASHBOARD ================= -->
+    <main id="dashboardScreen" class="container hidden" style="display:none !important;">
+
+        <div class="page-title" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+            <div>
+                <h1>Campus Lost &amp; Found Administration</h1>
+                <p>Review reports, verify ownership claims, manage item recovery status, and configure student access privileges.</p>
+            </div>
+            <div>
+                <button id="resetDemoBtn" class="btn-primary" type="button" style="height:38px;padding:0 16px;background:#0284c7;color:white;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;border:none;border-radius:6px;cursor:pointer;box-shadow:var(--shadow-sm);">
+                    <span>🔄</span> Reset Demo Data
+                </button>
+            </div>
+        </div>
+
+        <!-- STATS BAR -->
+        <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+                <div class="admin-stat-info">
+                    <h3>Total Reports</h3>
+                    <div class="stat-number" id="totalItems">0</div>
+                </div>
+                <div style="font-size:28px;">📦</div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="admin-stat-info">
+                    <h3>Lost Items</h3>
+                    <div class="stat-number" id="lostItems" style="color:var(--lost-red);">0</div>
+                </div>
+                <div style="font-size:28px;">🎒</div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="admin-stat-info">
+                    <h3>Found Items</h3>
+                    <div class="stat-number" id="foundItems" style="color:var(--found-green);">0</div>
+                </div>
+                <div style="font-size:28px;">✅</div>
+            </div>
+        </div>
+
+        <!-- CLAIMS VERIFICATION PANEL -->
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>Pending Item Claims &amp; Proof Verification</h2>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Details</th>
+                            <th>Claimants</th>
+                            <th>Claimant Contact</th>
+                            <th>Private Marks Reason</th>
+                            <th>Proof / Response</th>
+                            <th>Submitted On</th>
+                            <th>Administrative Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody id="claimsBody">
+                        <tr>
+                            <td colspan="7" class="empty-message">Loading claims...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="claimsEmpty" class="empty-state" style="display:none;">
+                <div class="empty-icon">🛡️</div>
+                <h3>No Claims Pending Review</h3>
+                <p>All student ownership claims have been resolved.</p>
+            </div>
+        </section>
+
+        <!-- REPORTS MANAGEMENT PANEL -->
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>All Campus Reports Management</h2>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Item Details</th>
+                            <th>Category &amp; Location</th>
+                            <th>Verification Control</th>
+                            <th>Lifecycle &amp; Recovery</th>
+                            <th>Admin Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsBody">
+                        <tr>
+                            <td colspan="7" class="empty-message">Loading all campus reports...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyMessage" class="empty-state" style="display:none;">
+                <div class="empty-icon">📋</div>
+                <h3>No Reports Found</h3>
+                <p>No active lost or found reports in the database.</p>
+            </div>
+        </section>
+
+        <!-- USER ROLES PANEL -->
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>User Role &amp; Access Control</h2>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Email Address</th>
+                            <th>Current Role</th>
+                            <th>Change Access Privilege</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody">
+                        <tr>
+                            <td colspan="4" class="empty-message">Loading registered users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University Lost &amp; Found Portal. Administrator Panel.</p>
+    </footer>
+
+    <script src="portal.js"></script>
+    <script>
+        document.getElementById('demoAdminBtn')?.addEventListener('click', () => {
+            document.getElementById('adminEmail').value = 'admin@alliance.edu.in';
+            document.getElementById('adminPassword').value = 'Admin@1234';
+            document.getElementById('adminLoginForm')?.requestSubmit();
+        });
+    </script>
+</body>
+</html>

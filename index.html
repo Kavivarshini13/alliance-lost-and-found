@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alliance University - Lost &amp; Found Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Campus Hero Banner - Preserved Background Design */
+        .hero {
+            min-height: 340px;
+            display: flex;
+            align-items: center;
+            padding: 50px 8%;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(14, 43, 75, 0.65),
+                    rgba(14, 43, 75, 0.25)
+                ),
+                url("campus.jpg");
+            background-size: cover;
+            background-position: center;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .hero-content {
+            max-width: 650px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 4vw, 50px);
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #ffffff;
+            line-height: 1.15;
+            letter-spacing: -0.5px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            margin-bottom: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn-primary {
+            background: #ffffff;
+            color: var(--primary);
+            padding: 13px 26px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 14.5px;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        }
+
+        .hero-btn-primary:hover {
+            background: var(--primary-light);
+            color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .hero-btn-outline {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1.5px solid rgba(255, 255, 255, 0.8);
+            padding: 13px 26px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 14.5px;
+            text-decoration: none;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+        }
+
+        .hero-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Quick Feature Cards */
+        .quick-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 22px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .feature-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .feature-info h3 {
+            color: var(--primary);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .feature-info p {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        /* Two Column Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+            gap: 24px;
+        }
+
+        .notice-content {
+            padding: 22px;
+            font-size: 13.5px;
+            color: var(--text-main);
+            line-height: 1.65;
+        }
+
+        .notice-content p {
+            margin-bottom: 14px;
+        }
+
+        .contact-box {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 14px 16px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin-bottom: 18px;
+        }
+
+        .contact-box p {
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .contact-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .notice-content h3 {
+            margin: 18px 0 10px;
+            color: var(--primary);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .notice-content ul {
+            padding-left: 20px;
+        }
+
+        .notice-content li {
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .hero {
+                padding: 40px 6%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Lost &amp; Found Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="history.html" class="student-login">My Reports</a>
+            <button class="admin-login" id="logoutButton" type="button">Logout</button>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html" class="active" aria-current="page">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html">Matches Found</a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html">Campus Map</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- ================= MAIN CONTAINER ================= -->
+    <main class="container">
+
+        <!-- CAMPUS HERO BANNER -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Campus Lost &amp; Found Portal</h1>
+                <p>Report, search, match, and safely recover lost personal belongings across the Alliance University campus.</p>
+            </div>
+        </section>
+
+        <!-- QUICK ACTION CARDS -->
+        <section class="quick-features-grid">
+            <a href="lost.html" class="feature-card">
+                <div class="feature-icon-box" style="background:#fee2e2;color:#dc2626;">🎒</div>
+                <div class="feature-info">
+                    <h3>Report Lost Item</h3>
+                    <p>File a report with item details to trigger automated match scanning.</p>
+                </div>
+            </a>
+
+            <a href="found.html" class="feature-card">
+                <div class="feature-icon-box" style="background:#dcfce7;color:#16a34a;">📦</div>
+                <div class="feature-info">
+                    <h3>Report Found Item</h3>
+                    <p>Found something on campus? Hand it over and help return it to its owner.</p>
+                </div>
+            </a>
+
+            <a href="matches.html" class="feature-card">
+                <div class="feature-icon-box" style="background:#e0e7ff;color:#4338ca;">⚡</div>
+                <div class="feature-info">
+                    <h3>Automated Matches</h3>
+                    <p>Review potential matches between lost and found items in real-time.</p>
+                </div>
+            </a>
+
+            <a href="map.html" class="feature-card">
+                <div class="feature-icon-box" style="background:#fef3c7;color:#d97706;">📍</div>
+                <div class="feature-info">
+                    <h3>Campus Map</h3>
+                    <p>Interactive location analysis of lost &amp; found spots across university grounds.</p>
+                </div>
+            </a>
+        </section>
+
+        <!-- TWO COLUMN LAYOUT -->
+        <div class="main-layout">
+
+            <!-- RECENT REPORTS PANEL -->
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Recent Lost &amp; Found Items</h2>
+                        <p style="font-size:12.5px;color:var(--text-muted);margin-top:2px;">Latest reports submitted across university blocks and facilities.</p>
+                    </div>
+                    <a href="search.html" class="details-link" style="font-size:13.5px;">View All Items &rarr;</a>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentReportsBody">
+                            <tr>
+                                <td colspan="6" class="empty-message">Loading recent reports...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- IMPORTANT NOTICE SIDEBAR -->
+            <aside class="panel">
+                <div class="panel-heading">
+                    <h2>Important Notice</h2>
+                </div>
+
+                <div class="notice-content">
+                    <p>
+                        For item claim assistance or to retrieve verified belongings, please visit the <strong>Student Affairs Office</strong> during official campus working hours.
+                    </p>
+
+                    <div class="contact-box">
+                        <p><strong>Phone:</strong> +91 80 4619 1500</p>
+                        <p><strong>Email:</strong> studentaffairs@alliance.edu.in</p>
+                        <p><strong>Location:</strong> Central Campus, Alliance University, Bengaluru</p>
+                    </div>
+
+                    <h3>Verification Guidelines</h3>
+                    <ul>
+                        <li>Present your official student identity card when claiming items.</li>
+                        <li>Provide specific private identifying marks or proof of purchase.</li>
+                        <li>Found identity cards and access cards are held securely by administration.</li>
+                        <li>Unclaimed items are safely preserved as per university lost-and-found bylaws.</li>
+                    </ul>
+                </div>
+            </aside>
+
+        </div>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University. All rights reserved. | Lost &amp; Found Portal</p>
+        <p style="font-size:12px;opacity:0.8;margin-top:4px;">Chikkahagade Cross, Chandapura - Anekal Main Road, Anekal, Bengaluru – 562106</p>
+    </footer>
+
+    <script src="portal.js"></script>
+</body>
+</html>

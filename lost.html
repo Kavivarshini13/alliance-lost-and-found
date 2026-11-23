@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Lost Item | Alliance University</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Lost &amp; Found Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="login.html" class="student-login">Student Login</a>
+            <a href="admin.html" class="admin-login">Admin Login</a>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html" class="active" aria-current="page">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html">Matches Found</a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html">Campus Map</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="container">
+
+        <div class="page-title">
+            <h1>Report a Lost Item</h1>
+            <p>Provide details below to report an item you lost on campus. Our automated matching engine will scan incoming found items immediately.</p>
+        </div>
+
+        <!-- FORM CARD -->
+        <div class="form-card">
+            <div id="successMessage" class="success-message">
+                ✓ Your lost item report has been submitted successfully.
+            </div>
+
+            <form id="lostForm" data-report-type="lost">
+                <!-- ITEM DETAILS -->
+                <div class="form-section">
+                    <h2>Item Information</h2>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="itemName">Item Name <span class="required">*</span></label>
+                            <input type="text" id="itemName" placeholder="Example: Black Leather Wallet, Dell Laptop, etc." required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category <span class="required">*</span></label>
+                            <select id="category" required>
+                                <option value="">Select Category</option>
+                                <option value="College ID Card">College ID Card</option>
+                                <option value="Laptop">Laptop</option>
+                                <option value="Mobile Phone">Mobile Phone</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Charger and Electronics Accessories">Charger and Electronics Accessories</option>
+                                <option value="Headphones and Earbuds">Headphones and Earbuds</option>
+                                <option value="Wallet and Purse">Wallet and Purse</option>
+                                <option value="Keys">Keys</option>
+                                <option value="Backpack and Handbag">Backpack and Handbag</option>
+                                <option value="Books and Notebooks">Books and Notebooks</option>
+                                <option value="Documents and Certificates">Documents and Certificates</option>
+                                <option value="Exam Hall Ticket">Exam Hall Ticket</option>
+                                <option value="University Access Card">University Access Card</option>
+                                <option value="Student Bus Pass">Student Bus Pass</option>
+                                <option value="Water Bottle">Water Bottle</option>
+                                <option value="Lunch Box">Lunch Box</option>
+                                <option value="Watch">Watch</option>
+                                <option value="Jewellery">Jewellery</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Spectacles">Spectacles</option>
+                                <option value="Calculator">Calculator</option>
+                                <option value="USB Drive and Storage Devices">USB Drive and Storage Devices</option>
+                                <option value="Sports Equipment">Sports Equipment</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dateLost">Date Lost <span class="required">*</span></label>
+                            <input type="date" id="dateLost" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="locationLost">Location Lost <span class="required">*</span></label>
+                            <input type="text" id="locationLost" list="campusLocations" placeholder="Choose or type Alliance campus location" required>
+                            <datalist id="campusLocations">
+                                <option value="LC2 (Faculty of Engineering and Technology)">LC2 (Faculty of Engineering and Technology)</option>
+                                <option value="LC2 (Alliance School of Law)">LC2 (Alliance School of Law)</option>
+                                <option value="LC3 (near Nescafé)">LC3 (near Nescafé)</option>
+                                <option value="Alliance University Library">Alliance University Library</option>
+                                <option value="Alliance Cricket Ground">Alliance Cricket Ground</option>
+                                <option value="Alliance Volleyball Court">Alliance Volleyball Court</option>
+                                <option value="Alliance Football Ground">Alliance Football Ground</option>
+                                <option value="Alliance School of Business">Alliance School of Business</option>
+                                <option value="Alliance School of Liberal Arts">Alliance School of Liberal Arts</option>
+                                <option value="Alliance Activity Center">Alliance Activity Center</option>
+                                <option value="Alliance Food Court">Alliance Food Court</option>
+                                <option value="Nescafé">Nescafé</option>
+                                <option value="Student Hostels">Student Hostels &amp; Residences</option>
+                                <option value="Campus Parking Area">Campus Parking Area</option>
+                                <option value="Other Campus Location">Other Campus Location</option>
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Item Description &amp; Distinct Marks <span class="required">*</span></label>
+                        <textarea id="description" placeholder="Describe the color, brand, stickers, unique scratches, or distinguishing features..." required></textarea>
+                    </div>
+
+                    <div class="form-group" id="cardVerificationGroup" hidden>
+                        <label for="privateVerification">Private Card Verification Details (Admin only)</label>
+                        <textarea id="privateVerification" maxlength="1000" placeholder="Optional: describe a distinguishing mark or department. Do not enter full card numbers or barcodes."></textarea>
+                        <span class="hint">Only campus administrators can view this information to prevent false claims.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="itemImage">Upload Item Photo (Optional)</label>
+                        <input type="file" id="itemImage" name="image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                        <div class="upload-preview" id="imagePreview" hidden style="display:none;">
+                            <span id="imageFilename"></span>
+                            <img id="imagePreviewImg" alt="Selected item image preview" style="display:none;">
+                        </div>
+                        <div class="helper-text upload-error" id="imageError" role="alert" hidden style="display:none;"></div>
+                        <span class="helper-text">Upload a clear photo if available (JPG, PNG, WEBP, up to 5 MB). Please do not upload sensitive ID cards.</span>
+                    </div>
+                </div>
+
+                <!-- CONTACT DETAILS -->
+                <div class="form-section">
+                    <h2>Your Contact Details</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contactName">Your Full Name <span class="required">*</span></label>
+                            <input type="text" id="contactName" placeholder="Enter your full name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact">Phone Number <span class="required">*</span></label>
+                            <input type="tel" id="contact" placeholder="Enter your phone or WhatsApp number" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BUTTONS -->
+                <div class="button-group">
+                    <button type="button" class="cancel-btn" onclick="window.location.href='index.html'">Cancel</button>
+                    <button type="submit" class="submit-btn">Submit Lost Report</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- EXCLUSIVE LOST ITEMS TABLE -->
+        <section class="panel" style="margin-top: 40px;">
+            <div class="panel-heading">
+                <div>
+                    <h2>Recently Reported Lost Items</h2>
+                    <p style="font-size:13px;color:var(--text-muted);margin-top:3px;">Items reported lost by students and staff across the campus.</p>
+                </div>
+                <span class="status lost" id="lostTableCount">0 Lost Items</span>
+            </div>
+
+            <!-- TABLE TOOLBAR -->
+            <div class="table-toolbar">
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="lostTableSearch" placeholder="Filter lost items by name or location...">
+                </div>
+                <div class="filter-selects">
+                    <select id="lostTableCategoryFilter">
+                        <option value="all">All Categories</option>
+                        <option value="College ID Card">College ID Card</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Mobile Phone">Mobile Phone</option>
+                        <option value="Charger and Electronics Accessories">Chargers &amp; Accessories</option>
+                        <option value="Headphones and Earbuds">Headphones &amp; Earbuds</option>
+                        <option value="Wallet and Purse">Wallet &amp; Purse</option>
+                        <option value="Keys">Keys</option>
+                        <option value="Backpack and Handbag">Backpacks &amp; Bags</option>
+                        <option value="Books and Notebooks">Books &amp; Notebooks</option>
+                        <option value="Water Bottle">Water Bottle</option>
+                        <option value="Watch">Watch</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Location Lost</th>
+                            <th>Date Lost</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lostTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-message">Loading lost items...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="lostTableEmpty" class="empty-state" style="display:none;">
+                <div class="empty-icon">🎒</div>
+                <h3>No Lost Items Match</h3>
+                <p>No matching lost items were found for the selected filter.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University Lost &amp; Found Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="portal.js"></script>
+    <script>
+        // Dedicated Lost Items Table Handler
+        async function loadLostTable() {
+            const tbody = document.getElementById('lostTableBody');
+            const countBadge = document.getElementById('lostTableCount');
+            const emptyState = document.getElementById('lostTableEmpty');
+            const searchInput = document.getElementById('lostTableSearch');
+            const catFilter = document.getElementById('lostTableCategoryFilter');
+            if (!tbody) return;
+
+            try {
+                const query = new URLSearchParams({ type: 'lost' });
+                if (catFilter && catFilter.value !== 'all') query.set('category', catFilter.value);
+                if (searchInput && searchInput.value.trim()) query.set('q', searchInput.value.trim());
+
+                const res = await api(`/api/items?${query.toString()}`);
+                let items = (res.items || []).filter(item => (item.type || '').toLowerCase() === 'lost');
+
+                // Client-side instant filter if searchInput has text
+                if (searchInput && searchInput.value.trim()) {
+                    const q = searchInput.value.trim().toLowerCase();
+                    items = items.filter(i => 
+                        (i.itemName || '').toLowerCase().includes(q) ||
+                        (i.description || '').toLowerCase().includes(q) ||
+                        (i.location || '').toLowerCase().includes(q)
+                    );
+                }
+
+                if (countBadge) countBadge.textContent = `${items.length} Lost Item${items.length === 1 ? '' : 's'}`;
+
+                tbody.innerHTML = '';
+                if (items.length === 0) {
+                    if (emptyState) emptyState.style.display = 'block';
+                    return;
+                }
+                if (emptyState) emptyState.style.display = 'none';
+
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+
+                    // Item Name
+                    const tdName = document.createElement('td');
+                    tdName.innerHTML = `<strong>${esc(item.itemName)}</strong><br><span style="font-size:12px;color:var(--text-muted);">${esc(item.description || '').slice(0, 50)}...</span>`;
+
+                    // Category
+                    const tdCat = document.createElement('td');
+                    tdCat.textContent = item.category || '-';
+
+                    // Location
+                    const tdLoc = document.createElement('td');
+                    tdLoc.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;">📍 ${esc(item.location || '-')}</span>`;
+
+                    // Date
+                    const tdDate = document.createElement('td');
+                    tdDate.textContent = item.date ? new Date(item.date).toLocaleDateString() : '-';
+
+                    // Status Badge
+                    const tdStatus = document.createElement('td');
+                    const badge = document.createElement('span');
+                    badge.className = 'status lost';
+                    badge.textContent = 'Lost';
+                    tdStatus.appendChild(badge);
+
+                    // Action
+                    const tdAction = document.createElement('td');
+                    const link = document.createElement('a');
+                    link.className = 'details-link';
+                    link.href = `item.html?id=${encodeURIComponent(item._id)}&return=lost.html`;
+                    link.innerHTML = 'View Details →';
+                    tdAction.appendChild(link);
+
+                    tr.append(tdName, tdCat, tdLoc, tdDate, tdStatus, tdAction);
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-message">${esc(err.message)}</td></tr>`;
+            }
+        }
+
+        document.getElementById('lostTableSearch')?.addEventListener('input', loadLostTable);
+        document.getElementById('lostTableCategoryFilter')?.addEventListener('change', loadLostTable);
+        window.addEventListener('load', loadLostTable);
+        // Refresh when form is submitted successfully
+        document.getElementById('lostForm')?.addEventListener('submit', () => setTimeout(loadLostTable, 700));
+    </script>
+</body>
+</html>

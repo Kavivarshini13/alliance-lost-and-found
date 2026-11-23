@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Details | Alliance University Lost &amp; Found</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .item-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .item-detail-field {
+            padding: 14px 18px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        .item-detail-field strong {
+            display: block;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .item-detail-field p {
+            margin: 0;
+            font-size: 15px;
+            color: var(--text-main);
+            font-weight: 500;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .field-full {
+            grid-column: 1 / -1;
+        }
+
+        #detail-image {
+            display: block;
+            max-width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            margin-top: 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Lost &amp; Found Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="history.html" class="student-login">My Reports</a>
+            <button class="admin-login" id="logoutButton" type="button">Logout</button>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html">Matches Found</a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html">Campus Map</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="container">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <div class="page-title" style="margin-bottom:0;">
+                <h1>Item Record Details</h1>
+                <p>Complete information and current claim status for this university report.</p>
+            </div>
+            <button id="backButton" class="btn-secondary" type="button">&larr; Back</button>
+        </div>
+
+        <div id="itemError" class="error-message" role="alert"></div>
+
+        <section id="itemDetails" class="panel" hidden>
+            <div class="panel-heading">
+                <h2>Item Overview</h2>
+            </div>
+
+            <div style="padding: 24px;">
+                <div class="item-details-grid">
+                    <div class="item-detail-field">
+                        <strong>Item Name</strong>
+                        <p id="detail-itemName"></p>
+                    </div>
+
+                    <div class="item-detail-field">
+                        <strong>Category</strong>
+                        <p id="detail-category"></p>
+                    </div>
+
+                    <div class="item-detail-field">
+                        <strong>Report Type</strong>
+                        <p id="detail-type"></p>
+                    </div>
+
+                    <div class="item-detail-field">
+                        <strong>Date Reported</strong>
+                        <p id="detail-date"></p>
+                    </div>
+
+                    <div class="item-detail-field">
+                        <strong>Campus Location</strong>
+                        <p id="detail-location"></p>
+                    </div>
+
+                    <div class="item-detail-field">
+                        <strong>Current Status / Recovery</strong>
+                        <p id="detail-status"></p>
+                    </div>
+
+                    <div class="item-detail-field field-full">
+                        <strong>Description &amp; Marks</strong>
+                        <p id="detail-description"></p>
+                    </div>
+
+                    <div class="item-detail-field field-full">
+                        <strong>Attached Item Photograph</strong>
+                        <p id="imageUnavailable" style="color:var(--text-muted);font-style:italic;">No photograph provided with this report.</p>
+                        <img id="detail-image" alt="Photograph of item" hidden>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University Lost &amp; Found Portal. All rights reserved.</p>
+    </footer>
+
+    <script src="portal.js"></script>
+</body>
+</html>

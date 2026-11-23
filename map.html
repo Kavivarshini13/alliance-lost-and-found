@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Map | Alliance University Lost &amp; Found</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <style>
+        .map-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 22px;
+            background: white;
+        }
+
+        .map-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .landmark-pill {
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .landmark-pill:hover,
+        .landmark-pill.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .map-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .map-view-toggle {
+            display: inline-flex;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .map-view-btn {
+            border: none;
+            background: #f8fafc;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .map-view-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        #campusMap {
+            height: 480px;
+            min-height: 360px;
+            background: var(--primary-light);
+            z-index: 1;
+        }
+
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 20px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 13px;
+            background: #ffffff;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 6px;
+            border-radius: 50%;
+            vertical-align: -1px;
+        }
+
+        .legend-low { background: #f6ad55; }
+        .legend-mid { background: #e76f51; }
+        .legend-high { background: #b42318; }
+
+        .map-note {
+            padding: 12px 20px 16px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            background: #ffffff;
+        }
+
+        .map-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 20px;
+            background: white;
+        }
+
+        .map-stat {
+            border: 1px solid var(--border-color);
+            background: var(--primary-subtle);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+        }
+
+        .map-stat span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .map-stat strong {
+            display: block;
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        #locationList {
+            list-style: none;
+            padding: 0 20px 20px;
+            margin: 0;
+            background: white;
+        }
+
+        #locationList li {
+            border-top: 1px solid var(--border-color);
+            padding: 12px 0;
+        }
+
+        .location-toggle {
+            width: 100%;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            color: var(--primary);
+            cursor: pointer;
+            font: inherit;
+            padding: 2px 0;
+        }
+
+        .location-toggle:hover .location-name {
+            text-decoration: underline;
+        }
+
+        .location-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .location-count {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .location-bar {
+            grid-column: 1 / -1;
+            height: 7px;
+            overflow: hidden;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .location-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .location-details {
+            color: var(--text-muted);
+            font-size: 12.5px;
+            padding: 10px 0 0;
+        }
+
+        .location-details span {
+            display: inline-block;
+            margin: 3px 8px 3px 0;
+            padding: 2px 8px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .campus-photo {
+            display: block;
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Interactive Reference Map Styles */
+        .ref-pin {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(18, 59, 104, 0.94);
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            z-index: 10;
+            user-select: none;
+        }
+
+        .ref-pin:hover,
+        .ref-pin.active {
+            transform: translate(-50%, -50%) scale(1.14);
+            background: #0284c7;
+            border-color: #38bdf8;
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.65);
+            z-index: 25;
+        }
+
+        .ref-pin .ref-pin-badge {
+            background: #ea580c;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 10px;
+            border: 1px solid #ffffff;
+            line-height: 1.3;
+        }
+
+        .ref-popup-card {
+            position: absolute;
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            width: min(320px, 86vw);
+            z-index: 35;
+            pointer-events: auto;
+            transform: translate(-50%, -105%);
+            animation: fadeInPopup 0.2s ease-out;
+        }
+
+        @keyframes fadeInPopup {
+            from { opacity: 0; transform: translate(-50%, -95%); }
+            to { opacity: 1; transform: translate(-50%, -105%); }
+        }
+
+        @media (max-width: 900px) {
+            .map-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="brand">
+            <a href="index.html" style="display:flex;align-items:center;gap:15px;text-decoration:none;">
+                <img src="logo.png" alt="Alliance University Logo" class="logo">
+                <div class="brand-text">
+                    <h2>Alliance University</h2>
+                    <p>Lost &amp; Found Portal</p>
+                </div>
+            </a>
+        </div>
+        <div class="login-buttons">
+            <a href="history.html" class="student-login">My Reports</a>
+            <button class="admin-login" id="logoutButton" type="button">Logout</button>
+        </div>
+    </header>
+
+    <!-- ================= NAVIGATION ================= -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="search.html">Search Items</a>
+        <a href="lost.html">Report Lost</a>
+        <a href="found.html">Report Found</a>
+        <a href="matches.html">Matches Found</a>
+        <a href="history.html">My Reports</a>
+        <a href="map.html" class="active" aria-current="page">Campus Map</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="container">
+
+        <div class="page-title">
+            <h1>Campus Lost Items Map</h1>
+            <p>Interactive spatial overview of reported lost items across Alliance University Central Campus in Anekal, Bengaluru.</p>
+        </div>
+
+        <!-- FILTER PANEL -->
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>Filter Map Reports</h2>
+            </div>
+            <div class="map-filters">
+                <div>
+                    <label for="mapDateFrom">From Date</label>
+                    <input type="date" id="mapDateFrom">
+                </div>
+                <div>
+                    <label for="mapDateTo">To Date</label>
+                    <input type="date" id="mapDateTo">
+                </div>
+                <div>
+                    <label for="mapItemType">Item Type</label>
+                    <select id="mapItemType">
+                        <option value="all">All Items (Lost &amp; Found)</option>
+                        <option value="lost">Lost Items Only</option>
+                        <option value="found">Found Items Only</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="mapCategory">Category</label>
+                    <select id="mapCategory">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="mapStatus">Report Status</label>
+                    <select id="mapStatus">
+                        <option value="all">All Active Reports</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="resolved">Resolved / Claimed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ALLIANCE CAMPUS QUICK LANDMARK FOCUS PILLS -->
+            <div class="landmark-toolbar" style="padding:12px 20px;background:#f8fafc;border-top:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                <span style="font-size:12.5px;font-weight:700;color:var(--primary);">Quick Landmark Focus:</span>
+                <button type="button" class="landmark-pill active" data-target="all">📍 All Campus</button>
+                <button type="button" class="landmark-pill" data-target="lc2_engineering">🏛️ LC2 (Engg &amp; Tech)</button>
+                <button type="button" class="landmark-pill" data-target="lc2_law">⚖️ LC2 (School of Law)</button>
+                <button type="button" class="landmark-pill" data-target="lc3_nescafe">🏛️ LC3 (near Nescafé)</button>
+                <button type="button" class="landmark-pill" data-target="library">📚 University Library</button>
+                <button type="button" class="landmark-pill" data-target="cricket_ground">🏏 Cricket Ground</button>
+                <button type="button" class="landmark-pill" data-target="volleyball_court">🏐 Volleyball Court</button>
+                <button type="button" class="landmark-pill" data-target="football_ground">⚽ Football Ground</button>
+                <button type="button" class="landmark-pill" data-target="school_business">💼 School of Business</button>
+                <button type="button" class="landmark-pill" data-target="school_liberal_arts">🎨 School of Liberal Arts</button>
+                <button type="button" class="landmark-pill" data-target="activity_center">🎯 Activity Center</button>
+                <button type="button" class="landmark-pill" data-target="food_court">🍔 Alliance Food Court</button>
+                <button type="button" class="landmark-pill" data-target="nescafe">☕ Nescafé</button>
+            </div>
+        </section>
+
+        <div id="mapLoading" class="panel" style="padding:20px;text-align:center;color:var(--text-muted);display:none;">
+            Loading campus map &amp; location report summary...
+        </div>
+
+        <div id="mapError" class="error-message" role="alert" style="display:none;"></div>
+
+        <div id="mapEmpty" class="empty-state" style="display:none;">
+            <div class="empty-icon">🗺️</div>
+            <h3>No Lost Reports Match These Filters</h3>
+            <p>Try widening the date range or selecting a different category.</p>
+        </div>
+
+        <!-- MAP AND STATS SECTION -->
+        <section class="map-content" id="mapResults">
+            <!-- LEAFLET MAP PANEL -->
+            <section class="panel">
+                <img class="campus-photo" src="campus.jpg" alt="Aerial view of Alliance University Central Campus">
+                
+                <div class="map-toolbar">
+                    <strong style="font-size:13px;color:var(--primary);display:flex;align-items:center;gap:6px;">
+                        <span>🗺️</span> Alliance University Central Campus (Anekal)
+                    </strong>
+                    <div class="map-view-toggle">
+                        <button type="button" id="btnStreetView" class="map-view-btn active">🗺️ Street Map</button>
+                        <button type="button" id="btnSatView" class="map-view-btn">🛰️ Satellite View</button>
+                        <button type="button" id="btnRefView" class="map-view-btn">📸 Reference Campus Map</button>
+                    </div>
+                </div>
+
+                <!-- Leaflet Interactive Map -->
+                <div id="campusMap" role="application" aria-label="OpenStreetMap view of Alliance University Central Campus"></div>
+
+                <!-- Alliance Reference Campus Map & Interactive Pin Overlay -->
+                <div id="referenceMapContainer" style="display:none;position:relative;width:100%;background:#090d16;overflow:hidden;border-bottom:1px solid var(--border-color);">
+                    <div style="position:relative;width:100%;max-width:100%;margin:0 auto;overflow:auto;">
+                        <img id="referenceMapImg" src="alliance_campus_reference_map.jpg" alt="Alliance University Campus Reference Map" style="width:100%;height:auto;display:block;min-width:680px;">
+                        <div id="referencePinsOverlay" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+                    </div>
+                </div>
+
+                <div class="map-legend">
+                    <strong style="color:var(--primary);">Report Density:</strong>
+                    <span><i class="legend-dot legend-low"></i>1-2 Items</span>
+                    <span><i class="legend-dot legend-mid"></i>3-5 Items</span>
+                    <span><i class="legend-dot legend-high"></i>6+ Items</span>
+                </div>
+                <p class="map-note">
+                    Interactive map showing verified Alliance University Central Campus landmarks: <strong>LC2 (Faculty of Engineering &amp; Technology), LC2 (Alliance School of Law), LC3 (near Nescafé), University Library, Cricket Ground, Volleyball Court, Football Ground, School of Business, School of Liberal Arts, Activity Center, Food Court, and Nescafé</strong>. Switch views or click any pin to view reported items and message finders/reporters.
+                </p>
+            </section>
+
+            <!-- LOCATION BREAKDOWN STATS -->
+            <section class="panel">
+                <div class="panel-heading">
+                    <h2>Location Breakdown</h2>
+                </div>
+                <div class="map-stats">
+                    <div class="map-stat">
+                        <span>Active Lost Reports</span>
+                        <strong id="mapTotal">0</strong>
+                    </div>
+                    <div class="map-stat">
+                        <span>Top Location</span>
+                        <strong id="mapMostLocation" style="font-size:18px;">—</strong>
+                    </div>
+                    <div class="map-stat">
+                        <span>Distinct Locations</span>
+                        <strong id="mapLocationCount">0</strong>
+                    </div>
+                    <div class="map-stat">
+                        <span>Resolved Items</span>
+                        <strong id="mapResolvedCount">0</strong>
+                    </div>
+                </div>
+
+                <h3 style="padding:16px 20px 8px;color:var(--primary);font-size:14px;font-weight:700;background:white;">Reports by Campus Location</h3>
+                <ol id="locationList"></ol>
+                <p id="locationEmpty" class="empty-state" style="display:none;padding:16px;">No campus location records found.</p>
+            </section>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>&copy; 2026 Alliance University Lost &amp; Found Portal. All rights reserved.</p>
+    </footer>
+
+    <!-- LEAFLET & LOGIC -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="portal.js"></script>
+    <!-- Fixed file name to campus_map.js (with underscore) -->
+    <script src="campus_map.js"></script>
+</body>
+</html>

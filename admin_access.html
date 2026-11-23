@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Access | Alliance University</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .access-card {
+            width: min(480px, 94vw);
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px 32px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .access-card h1 {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .access-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .access-options {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .option-user {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+
+        .option-user:hover {
+            background: #dbeafe;
+            transform: translateY(-2px);
+        }
+
+        .option-admin {
+            background: var(--primary);
+            color: white;
+        }
+
+        .option-admin:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <main class="access-card">
+        <div style="font-size:42px;margin-bottom:12px;">🔐</div>
+        <h1>Portal Access Selection</h1>
+        <p>Choose your access role to proceed to the Alliance University Lost &amp; Found Portal.</p>
+
+        <div class="access-options">
+            <a href="search.html" class="option-button option-user">
+                <span>👁️</span>
+                <span>View Public Reports (Student View)</span>
+            </a>
+
+            <a href="admin.html" class="option-button option-admin">
+                <span>🛡️</span>
+                <span>Administrator Dashboard (Full Access)</span>
+            </a>
+        </div>
+
+        <div style="margin-top:28px;">
+            <a href="index.html" class="details-link">&larr; Return to Home Page</a>
+        </div>
+    </main>
+
+</body>
+</html>
