@@ -1008,14 +1008,19 @@
     if (!locationList) return;
     locationList.replaceChildren();
 
-    const maxCount = Math.max(1, ...groupedLocations.map(g => g.items.length));
-    const sorted = [...groupedLocations].sort((a, b) => b.items.length - a.items.length);
+    // Sort: buildings with items first (highest count to lowest), then remaining buildings alphabetically
+    const sorted = [...groupedLocations].sort((a, b) => {
+      if (b.items.length !== a.items.length) return b.items.length - a.items.length;
+      return a.building.shortName.localeCompare(b.building.shortName);
+    });
 
-    if (sorted.length === 0 || totalCount === 0) {
+    if (sorted.length === 0) {
       if (locationEmpty) locationEmpty.style.display = 'block';
       return;
     }
     if (locationEmpty) locationEmpty.style.display = 'none';
+
+    const maxCount = Math.max(1, ...groupedLocations.map(g => g.items.length));
 
     sorted.forEach((group, index) => {
       const building = group.building;
@@ -1031,17 +1036,21 @@
 
       const nameSpan = document.createElement('span');
       nameSpan.className = 'location-name';
-      nameSpan.innerHTML = `<span>${building.icon}</span> ${esc(building.shortName)}`;
+      nameSpan.innerHTML = `<span>${building.icon}</span> <span>${esc(building.shortName)}</span> <small style="color:var(--text-muted);font-weight:normal;margin-left:4px;">(${esc(building.category)})</small>`;
 
       const countSpan = document.createElement('span');
       countSpan.className = 'location-count';
       countSpan.textContent = `${count} item${count === 1 ? '' : 's'}`;
+      if (count > 0) {
+        countSpan.style.background = getMarkerColor(count);
+        countSpan.style.color = '#ffffff';
+      }
 
       const bar = document.createElement('span');
       bar.className = 'location-bar';
       const fill = document.createElement('span');
-      fill.style.width = `${Math.max(6, (count / maxCount) * 100)}%`;
-      fill.style.background = getMarkerColor(count);
+      fill.style.width = count > 0 ? `${Math.max(8, (count / maxCount) * 100)}%` : '0%';
+      fill.style.background = count > 0 ? getMarkerColor(count) : '#cbd5e1';
       bar.append(fill);
 
       button.append(nameSpan, countSpan, bar);
@@ -1051,57 +1060,72 @@
       detail.id = detailsId;
       detail.hidden = true;
 
-      // Category breakdown tags
-      const catCounts = {};
-      group.items.forEach(it => {
-        catCounts[it.category] = (catCounts[it.category] || 0) + 1;
-      });
-      const catWrap = document.createElement('div');
-      catWrap.style.marginBottom = '8px';
-      Object.entries(catCounts).forEach(([cat, c]) => {
-        const tag = document.createElement('span');
-        tag.textContent = `${cat}: ${c}`;
-        catWrap.append(tag);
-      });
-      detail.append(catWrap);
-
-      // Item links with modal triggers
-      const listDiv = document.createElement('div');
-      listDiv.style.marginTop = '6px';
-      group.items.forEach(it => {
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px dashed #e2e8f0;';
-        row.innerHTML = `
-          <div>
-            <span class="status ${(it.type || '').toLowerCase()}" style="font-size:9.5px;padding:1px 5px;margin-right:4px;">${(it.type || 'lost').toUpperCase()}</span>
-            <strong style="font-size:12.5px;color:var(--primary);">${esc(it.itemName)}</strong>
-            <span style="font-size:11px;color:var(--text-muted);"> · ${it.date ? new Date(it.date).toLocaleDateString() : 'Recent'}</span>
-          </div>
-          <div style="display:flex;gap:4px;">
-            <button type="button" class="btn-list-view" style="font-size:11px;padding:2px 8px;border:1px solid #cbd5e1;background:#fff;border-radius:4px;cursor:pointer;color:var(--primary);font-weight:600;">Details</button>
-            <button type="button" class="btn-list-chat" style="font-size:11px;padding:2px 8px;border:none;background:var(--primary);color:#fff;border-radius:4px;cursor:pointer;font-weight:600;">Chat</button>
-          </div>
-        `;
-
-        row.querySelector('.btn-list-view')?.addEventListener('click', () => {
-          if (typeof window.openItemModal === 'function') {
-            window.openItemModal(it);
-          } else {
-            location.assign(`item.html?id=${encodeURIComponent(it._id)}&return=map.html`);
-          }
+      if (count > 0) {
+        // Category breakdown tags
+        const catCounts = {};
+        group.items.forEach(it => {
+          catCounts[it.category] = (catCounts[it.category] || 0) + 1;
         });
-
-        row.querySelector('.btn-list-chat')?.addEventListener('click', () => {
-          if (typeof window.openChatModal === 'function') {
-            window.openChatModal(it);
-          } else {
-            location.assign(`contact.html?subject=${encodeURIComponent('Inquiry for ' + it.itemName)}`);
-          }
+        const catWrap = document.createElement('div');
+        catWrap.style.marginBottom = '8px';
+        Object.entries(catCounts).forEach(([cat, c]) => {
+          const tag = document.createElement('span');
+          tag.textContent = `${cat}: ${c}`;
+          catWrap.append(tag);
         });
+        detail.append(catWrap);
 
-        listDiv.append(row);
-      });
-      detail.append(listDiv);
+        // Item links with modal triggers
+        const listDiv = document.createElement('div');
+        listDiv.style.marginTop = '6px';
+        group.items.forEach(it => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px dashed #e2e8f0;';
+          row.innerHTML = `
+            <div>
+              <span class="status ${(it.type || '').toLowerCase()}" style="font-size:9.5px;padding:1px 5px;margin-right:4px;">${(it.type || 'lost').toUpperCase()}</span>
+              <strong style="font-size:12.5px;color:var(--primary);">${esc(it.itemName)}</strong>
+              <span style="font-size:11px;color:var(--text-muted);"> · ${it.date ? new Date(it.date).toLocaleDateString() : 'Recent'}</span>
+            </div>
+            <div style="display:flex;gap:4px;">
+              <button type="button" class="btn-list-view" style="font-size:11px;padding:2px 8px;border:1px solid #cbd5e1;background:#fff;border-radius:4px;cursor:pointer;color:var(--primary);font-weight:600;">Details</button>
+              <button type="button" class="btn-list-chat" style="font-size:11px;padding:2px 8px;border:none;background:var(--primary);color:#fff;border-radius:4px;cursor:pointer;font-weight:600;">Chat</button>
+            </div>
+          `;
+
+          row.querySelector('.btn-list-view')?.addEventListener('click', () => {
+            if (typeof window.openItemModal === 'function') {
+              window.openItemModal(it);
+            } else {
+              location.assign(`item.html?id=${encodeURIComponent(it._id)}&return=map.html`);
+            }
+          });
+
+          row.querySelector('.btn-list-chat')?.addEventListener('click', () => {
+            if (typeof window.openChatModal === 'function') {
+              window.openChatModal(it);
+            } else {
+              location.assign(`contact.html?subject=${encodeURIComponent('Inquiry for ' + it.itemName)}`);
+            }
+          });
+
+          listDiv.append(row);
+        });
+        detail.append(listDiv);
+      } else {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding:6px 0;font-size:12px;color:var(--text-muted);font-style:italic;';
+        emptyMsg.textContent = 'No active lost or found reports currently recorded at this landmark.';
+        detail.append(emptyMsg);
+      }
+
+      const quickActions = document.createElement('div');
+      quickActions.style.cssText = 'margin-top:8px;padding-top:6px;border-top:1px solid #e2e8f0;display:flex;gap:6px;';
+      quickActions.innerHTML = `
+        <a href="found.html?location=${encodeURIComponent(building.displayName)}" style="font-size:11.5px;padding:4px 10px;background:var(--primary);color:#fff;border-radius:4px;text-decoration:none;font-weight:600;">Report Found Here</a>
+        <a href="lost.html?location=${encodeURIComponent(building.displayName)}" style="font-size:11.5px;padding:4px 10px;background:#fff;color:var(--lost-red);border:1px solid #fca5a5;border-radius:4px;text-decoration:none;font-weight:600;">Report Lost Here</a>
+      `;
+      detail.append(quickActions);
 
       // Focus map pin button
       const pinBtn = document.createElement('button');
