@@ -50,6 +50,30 @@
             font-size: 13.5px;
         }
 
+        .auth-submit-btn {
+            width: 100%;
+            height: 48px;
+            margin-top: 10px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--primary);
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-submit-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(18, 59, 104, 0.25);
+        }
+
         /* Admin Stats Bar */
         .admin-stats-grid {
             display: grid;
@@ -159,18 +183,15 @@
             <form id="adminLoginForm">
                 <div class="form-group">
                     <label for="adminEmail">Administrator Email</label>
-                    <input type="email" id="adminEmail" placeholder="admin@alliance.edu.in" required>
+                    <input type="email" id="adminEmail" autocomplete="username" required>
                 </div>
 
                 <div class="form-group">
                     <label for="adminPassword">Admin Password</label>
-                    <input type="password" id="adminPassword" placeholder="Enter administrative password" required>
+                    <input type="password" id="adminPassword" autocomplete="current-password" required>
                 </div>
 
                 <button type="submit" class="auth-submit-btn">Authorize Admin Access</button>
-                <button type="button" id="demoAdminBtn" style="width:100%;height:40px;margin-top:10px;border:1px solid #cbd5e1;border-radius:var(--radius-sm);background:#f1f5f9;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;">
-                    ⚡ Demo Admin One-Click Sign In
-                </button>
             </form>
 
             <div style="margin-top:20px;text-align:center;">
@@ -316,12 +337,5 @@
     </footer>
 
     <script src="portal.js"></script>
-    <script>
-        document.getElementById('demoAdminBtn')?.addEventListener('click', () => {
-            document.getElementById('adminEmail').value = 'admin@alliance.edu.in';
-            document.getElementById('adminPassword').value = 'Admin@1234';
-            document.getElementById('adminLoginForm')?.requestSubmit();
-        });
-    </script>
 </body>
 </html>

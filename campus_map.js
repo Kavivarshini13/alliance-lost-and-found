@@ -533,7 +533,7 @@
   let map = null;
   let streetLayer = null;
   let satelliteLayer = null;
-  let currentViewMode = 'street'; // 'street' | 'sat' | 'ref'
+  let currentViewMode = 'ref'; // Single default campus map view ('ref')
   let markersLayer = null;
   let markersByBuilding = new Map();
   let allCampusItems = [];
@@ -622,8 +622,6 @@
   }
 
   function setupViewButtons() {
-    el('btnStreetView')?.addEventListener('click', () => setViewMode('street'));
-    el('btnSatView')?.addEventListener('click', () => setViewMode('sat'));
     el('btnRefView')?.addEventListener('click', () => setViewMode('ref'));
   }
 

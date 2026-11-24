@@ -1,0 +1,29 @@
+[
+  {
+    "_id": "usr_admin_1",
+    "id": "usr_admin_1",
+    "name": "Campus Administrator",
+    "email": "admin@alliance.edu.in",
+    "passwordHash": "$2b$10$mzvz9fKvUJ.cSCyXQTb63OUewH/1U4b3ygSn5q5pel/Tqb0sjOsCu",
+    "role": "admin",
+    "createdAt": "2026-11-24T16:30:18.098Z"
+  },
+  {
+    "_id": "usr_student_1",
+    "id": "usr_student_1",
+    "name": "Kavitha R",
+    "email": "kavitha.r@ced.alliance.edu.in",
+    "passwordHash": "$2b$10$Y0wi7TRvgswo3HVeAemevORre5QCiwduUz33rebty99YOord51MOm",
+    "role": "user",
+    "createdAt": "2026-11-24T16:30:18.217Z"
+  },
+  {
+    "_id": "usr_student_2",
+    "id": "usr_student_2",
+    "name": "Rohan Sharma",
+    "email": "rohan.s@ced.alliance.edu.in",
+    "passwordHash": "$2b$10$DVWtwkba1QunR7Nnhtk36O95/vpc67.1ZCV8R1uhykCCyWOxFYQ4G",
+    "role": "user",
+    "createdAt": "2026-11-24T16:30:18.295Z"
+  }
+]

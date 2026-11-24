@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 // Ensure Node resolves modules from root, backend/node_modules, and frontend/node_modules
 const backendModules = path.join(__dirname, 'backend', 'node_modules');
@@ -473,6 +474,62 @@ const itemSchema = new mongoose.Schema({
 
 let UserModel, ItemModel;
 
+// ---------------- PERSISTENT DATA STORAGE (Cross-Browser Shared Datastore) ----------------
+const USERS_FILE = path.join(__dirname, 'users_db.json');
+const ITEMS_FILE = path.join(__dirname, 'items_db.json');
+
+function saveUsersToDisk() {
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(memoryStore.users, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[Storage] Error saving users_db.json:', e.message);
+  }
+}
+
+function saveItemsToDisk() {
+  try {
+    fs.writeFileSync(ITEMS_FILE, JSON.stringify(memoryStore.items, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[Storage] Error saving items_db.json:', e.message);
+  }
+}
+
+function loadPersistentData() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(savedUser => {
+          const idx = memoryStore.users.findIndex(u => u.email.toLowerCase() === savedUser.email.toLowerCase());
+          if (idx >= 0) {
+            memoryStore.users[idx] = { ...memoryStore.users[idx], ...savedUser };
+          } else {
+            memoryStore.users.push(savedUser);
+          }
+        });
+      }
+    } else {
+      saveUsersToDisk();
+    }
+  } catch (e) {
+    console.warn('[Storage] Notice on loading users_db.json:', e.message);
+  }
+
+  try {
+    if (fs.existsSync(ITEMS_FILE)) {
+      const items = JSON.parse(fs.readFileSync(ITEMS_FILE, 'utf8'));
+      if (Array.isArray(items) && items.length > 0) {
+        memoryStore.items = items;
+      }
+    } else {
+      saveItemsToDisk();
+    }
+  } catch (e) {
+    console.warn('[Storage] Notice on loading items_db.json:', e.message);
+  }
+}
+loadPersistentData();
+
 async function initDatabase() {
   try {
     await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 2000 });
@@ -480,9 +537,42 @@ async function initDatabase() {
     UserModel = mongoose.models.User || mongoose.model('User', userSchema);
     ItemModel = mongoose.models.Item || mongoose.model('Item', itemSchema);
     console.log('MongoDB successfully connected.');
+
+    // Sync registered accounts from MongoDB
+    const dbUsers = await UserModel.find({}).catch(() => []);
+    dbUsers.forEach(dbU => {
+      const idx = memoryStore.users.findIndex(u => u.email.toLowerCase() === dbU.email.toLowerCase());
+      const uObj = {
+        _id: String(dbU._id),
+        id: String(dbU._id),
+        name: dbU.name,
+        email: dbU.email.toLowerCase(),
+        passwordHash: dbU.passwordHash,
+        role: dbU.role || 'user',
+        createdAt: dbU.createdAt ? dbU.createdAt.toISOString() : new Date().toISOString()
+      };
+      if (idx >= 0) {
+        memoryStore.users[idx] = uObj;
+      } else {
+        memoryStore.users.push(uObj);
+      }
+    });
+
+    for (const memUser of memoryStore.users) {
+      const existsInDb = dbUsers.some(u => u.email.toLowerCase() === memUser.email.toLowerCase());
+      if (!existsInDb) {
+        await UserModel.create({
+          name: memUser.name,
+          email: memUser.email.toLowerCase(),
+          passwordHash: memUser.passwordHash,
+          role: memUser.role || 'user'
+        }).catch(() => {});
+      }
+    }
+    saveUsersToDisk();
   } catch (err) {
     isMongoConnected = false;
-    console.log('MongoDB offline or unreachable; active in robust in-memory datastore mode.');
+    console.log('MongoDB offline or unreachable; active in robust file & in-memory datastore mode.');
   }
 }
 initDatabase();
@@ -541,16 +631,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body || {};
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email, and password are required.' });
   }
 
   const cleanEmail = String(email).trim().toLowerCase();
-  const exists = memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail);
+
+  // Prevent duplicate registrations across memoryStore & database
+  let exists = memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail);
+  if (!exists && isMongoConnected && UserModel) {
+    try {
+      exists = await UserModel.findOne({ email: cleanEmail });
+    } catch {}
+  }
+
   if (exists) {
-    return res.status(409).json({ message: 'An account with this email already exists.' });
+    return res.status(409).json({ message: 'Email already registered, please log in' });
   }
 
   const newUser = {
@@ -564,6 +662,24 @@ app.post('/api/auth/register', (req, res) => {
   };
 
   memoryStore.users.push(newUser);
+  saveUsersToDisk();
+
+  if (isMongoConnected && UserModel) {
+    try {
+      const created = await UserModel.create({
+        name: newUser.name,
+        email: newUser.email,
+        passwordHash: newUser.passwordHash,
+        role: newUser.role
+      });
+      newUser._id = String(created._id);
+      newUser.id = String(created._id);
+      saveUsersToDisk();
+    } catch (e) {
+      console.warn('MongoDB user create:', e.message);
+    }
+  }
+
   const token = generateToken(newUser);
   res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
   res.status(201).json({
@@ -573,14 +689,34 @@ app.post('/api/auth/register', (req, res) => {
   });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
 
   const cleanEmail = String(email).trim().toLowerCase();
-  const user = memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail);
+  let user = memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail);
+
+  if (!user && isMongoConnected && UserModel) {
+    try {
+      const dbU = await UserModel.findOne({ email: cleanEmail });
+      if (dbU) {
+        user = {
+          _id: String(dbU._id),
+          id: String(dbU._id),
+          name: dbU.name,
+          email: dbU.email.toLowerCase(),
+          passwordHash: dbU.passwordHash,
+          role: dbU.role || 'user',
+          createdAt: dbU.createdAt ? dbU.createdAt.toISOString() : new Date().toISOString()
+        };
+        memoryStore.users.push(user);
+        saveUsersToDisk();
+      }
+    } catch {}
+  }
+
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
     return res.status(401).json({ message: 'Invalid official student email or password.' });
   }
@@ -594,10 +730,29 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-app.post('/api/admin/auth/login', (req, res) => {
+app.post('/api/admin/auth/login', async (req, res) => {
   const { email, password } = req.body || {};
   const cleanEmail = String(email || '').trim().toLowerCase();
-  const user = memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail && u.role === 'admin');
+  let user = memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail && u.role === 'admin');
+
+  if (!user && isMongoConnected && UserModel) {
+    try {
+      const dbU = await UserModel.findOne({ email: cleanEmail, role: 'admin' });
+      if (dbU) {
+        user = {
+          _id: String(dbU._id),
+          id: String(dbU._id),
+          name: dbU.name,
+          email: dbU.email.toLowerCase(),
+          passwordHash: dbU.passwordHash,
+          role: dbU.role,
+          createdAt: dbU.createdAt ? dbU.createdAt.toISOString() : new Date().toISOString()
+        };
+        memoryStore.users.push(user);
+        saveUsersToDisk();
+      }
+    } catch {}
+  }
 
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
     return res.status(401).json({ message: 'Invalid administrator credentials.' });
@@ -671,6 +826,7 @@ function handleCreateReport(type, req, res) {
   };
 
   memoryStore.items.unshift(newItem);
+  saveItemsToDisk();
 
   // Check for auto-match notifications
   const oppositeType = reportType === 'lost' ? 'found' : 'lost';
@@ -974,34 +1130,6 @@ app.patch('/api/notifications/:id/read', (req, res) => {
   res.json({ notification: notif });
 });
 
-// ---------------- MATCHES API ----------------
-app.get('/api/matches', (req, res) => {
-  const lostItems = memoryStore.items.filter(i => normalizeType(i.type) === 'lost' && i.status !== 'resolved');
-  const foundItems = memoryStore.items.filter(i => normalizeType(i.type) === 'found' && i.status !== 'resolved');
-
-  const matches = [];
-  lostItems.forEach(l => {
-    foundItems.forEach(f => {
-      const catMatch = l.category.toLowerCase() === f.category.toLowerCase();
-      const locMatch = l.location.toLowerCase() === f.location.toLowerCase();
-      const nameMatch = l.itemName.toLowerCase().split(' ').some(w => w.length > 3 && f.itemName.toLowerCase().includes(w));
-
-      if (catMatch || (locMatch && nameMatch)) {
-        matches.push({
-          _id: `match_${l._id}_${f._id}`,
-          status: 'Possible Match Found',
-          lostItem: l,
-          foundItem: f,
-          contactItemId: f._id,
-          createdAt: new Date().toISOString()
-        });
-      }
-    });
-  });
-
-  res.json({ matches });
-});
-
 // ---------------- CAMPUS MAP API ----------------
 app.get('/api/map/lost-items', (req, res) => {
   const { mapCategory, mapStatus } = req.query;
@@ -1162,38 +1290,159 @@ app.patch('/api/admin/users/:id/role', requireAdmin, (req, res) => {
 
 // ---------------- AUTOMATED MATCHING ENGINE ----------------
 function calculateMatchScore(lostItem, foundItem) {
+  if (!lostItem || !foundItem) return { score: 0, reasonText: '', reasons: [] };
+
+  const reasons = [];
   let score = 0;
-  
-  // 1. Category match (35%)
-  if (lostItem.category && foundItem.category && lostItem.category.toLowerCase() === foundItem.category.toLowerCase()) {
-    score += 35;
+
+  // 1. Category comparison: (a) MUST MATCH
+  const catLost = String(lostItem.category || '').trim().toLowerCase();
+  const catFound = String(foundItem.category || '').trim().toLowerCase();
+
+  if (!catLost || !catFound || catLost !== catFound) {
+    return { score: 0, reasonText: '', reasons: [] };
   }
-  
-  // 2. Location match (25%)
-  if (lostItem.location && foundItem.location) {
-    const loc1 = lostItem.location.toLowerCase();
-    const loc2 = foundItem.location.toLowerCase();
-    if (loc1 === loc2 || loc1.includes(loc2) || loc2.includes(loc1)) {
+
+  score += 30;
+  reasons.push(`Same category (${lostItem.category || 'Item'})`);
+
+  // 2. Campus Location comparison: (c)
+  const locLost = String(lostItem.location || '').trim().toLowerCase();
+  const locFound = String(foundItem.location || '').trim().toLowerCase();
+
+  if (locLost && locFound) {
+    if (locLost === locFound) {
       score += 25;
+      reasons.push(`same location (${lostItem.location})`);
+    } else if (locLost.includes(locFound) || locFound.includes(locLost)) {
+      score += 18;
+      reasons.push(`matching location (${lostItem.location})`);
+    } else {
+      const lWords1 = locLost.split(/\s+/).filter(w => w.length > 3);
+      const lWords2 = locFound.split(/\s+/).filter(w => w.length > 3);
+      const commonLoc = lWords1.some(w => lWords2.includes(w));
+      if (commonLoc) {
+        score += 15;
+        reasons.push(`same campus area (${lostItem.location})`);
+      }
     }
   }
-  
-  // 3. Keyword / title similarity (40%)
-  const stopWords = new Set(['the', 'and', 'for', 'with', 'item', 'lost', 'found', 'near', 'left', 'room', 'block', 'floor', 'campus']);
-  const words1 = (lostItem.itemName + ' ' + (lostItem.description || '')).toLowerCase().split(/[\s,.-]+/).filter(w => w.length > 2 && !stopWords.has(w));
-  const words2 = (foundItem.itemName + ' ' + (foundItem.description || '')).toLowerCase().split(/[\s,.-]+/).filter(w => w.length > 2 && !stopWords.has(w));
-  
-  let commonWords = 0;
-  const set2 = new Set(words2);
-  words1.forEach(w => {
-    if (set2.has(w)) commonWords++;
-  });
-  
-  if (commonWords > 0) {
-    score += Math.min(40, commonWords * 15);
+
+  // 3. Color, Brand, & Distinctive Item Keywords: (b)
+  const textLost = `${lostItem.itemName || ''} ${lostItem.description || ''}`.toLowerCase();
+  const textFound = `${foundItem.itemName || ''} ${foundItem.description || ''}`.toLowerCase();
+
+  const colors = [
+    'black', 'white', 'blue', 'red', 'silver', 'grey', 'gray', 'green', 
+    'yellow', 'gold', 'brown', 'pink', 'purple', 'orange', 'navy', 'beige', 'maroon'
+  ];
+  const brands = [
+    'boat', 'apple', 'samsung', 'dell', 'hp', 'lenovo', 'sony', 'asus', 
+    'acer', 'casio', 'fastrack', 'noise', 'titan', 'realme', 'redmi', 
+    'xiaomi', 'wildcraft', 'jbl', 'bose', 'logitech', 'zebronics', 'sandisk', 
+    'oneplus', 'faber-castell', 'faber castell'
+  ];
+
+  // Color check
+  const lostColors = colors.filter(c => new RegExp(`\\b${c}\\b`, 'i').test(textLost));
+  const foundColors = colors.filter(c => new RegExp(`\\b${c}\\b`, 'i').test(textFound));
+
+  if (lostColors.length > 0 && foundColors.length > 0) {
+    const matchedColor = lostColors.find(c => foundColors.includes(c));
+    if (matchedColor) {
+      score += 15;
+      const displayColor = matchedColor.charAt(0).toUpperCase() + matchedColor.slice(1);
+      reasons.push(`Similar color (${displayColor})`);
+    } else {
+      // Conflict penalty: reported lost one color, found is different color
+      score -= 20;
+    }
   }
-  
-  return Math.min(98, Math.max(0, score));
+
+  // Brand check
+  const lostBrands = brands.filter(b => textLost.includes(b));
+  const foundBrands = brands.filter(b => textFound.includes(b));
+
+  if (lostBrands.length > 0 && foundBrands.length > 0) {
+    const matchedBrand = lostBrands.find(b => foundBrands.includes(b));
+    if (matchedBrand) {
+      score += 15;
+      const displayBrand = matchedBrand.toUpperCase();
+      reasons.push(`matching brand '${displayBrand}'`);
+    } else {
+      // Conflict penalty: brand mismatch
+      score -= 25;
+    }
+  }
+
+  // Keyword check
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'item', 'lost', 'found', 'near', 'left', 
+    'room', 'block', 'floor', 'campus', 'alliance', 'university', 'please', 
+    'contact', 'student', 'table', 'desk', 'handover', 'help', 'area', 'side',
+    ...colors, ...brands
+  ]);
+
+  const extractTokens = (str) => {
+    return str.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.has(w));
+  };
+
+  const tokensLost = extractTokens(textLost);
+  const tokensFound = extractTokens(textFound);
+  const foundSet = new Set(tokensFound);
+
+  const matchedKeywords = Array.from(new Set(tokensLost.filter(t => foundSet.has(t))));
+  if (matchedKeywords.length > 0) {
+    const kwScore = Math.min(20, matchedKeywords.length * 8);
+    score += kwScore;
+    const topKws = matchedKeywords.slice(0, 2).map(k => `'${k.toUpperCase()}'`).join(' and ');
+    reasons.push(`matching keyword ${topKws}`);
+  }
+
+  // 4. Date Lost vs. Date Found: (d)
+  if (lostItem.date && foundItem.date) {
+    const tLost = new Date(lostItem.date).getTime();
+    const tFound = new Date(foundItem.date).getTime();
+
+    if (!isNaN(tLost) && !isNaN(tFound)) {
+      const diffMs = tFound - tLost;
+      const diffDays = Math.abs(diffMs) / 86400000;
+
+      if (diffDays <= 1) {
+        score += 15;
+        if (diffDays <= 0.4) {
+          reasons.push('same date');
+        } else {
+          reasons.push('within 1 day');
+        }
+      } else if (diffDays <= 3) {
+        score += 10;
+        reasons.push('within 3 days');
+      } else if (diffDays <= 7) {
+        score += 5;
+        reasons.push('within 1 week');
+      } else if (diffMs < -2 * 86400000) {
+        score -= 15;
+      }
+    }
+  }
+
+  // Realistic bounds: max 95%, min 0%
+  score = Math.max(0, Math.min(95, Math.round(score)));
+
+  // Realistic threshold: Only matches with 60%+ confidence are presented
+  if (score < 60) {
+    return { score, reasonText: '', reasons: [] };
+  }
+
+  const reasonText = reasons.length > 0 
+    ? `Matched on: ${reasons.join(', ')}`
+    : `Matched on: Same category (${lostItem.category})`;
+
+  return { score, reasonText, reasons };
 }
 
 app.get('/api/matches', (req, res) => {
@@ -1203,13 +1452,19 @@ app.get('/api/matches', (req, res) => {
   const matches = [];
   lost.forEach(l => {
     found.forEach(f => {
-      const score = calculateMatchScore(l, f);
-      if (score >= 50) {
+      const result = calculateMatchScore(l, f);
+      if (result.score >= 60) {
         matches.push({
           id: `match_${l._id}_${f._id}`,
-          score,
+          _id: `match_${l._id}_${f._id}`,
+          score: result.score,
+          reasonText: result.reasonText,
+          reasons: result.reasons,
+          status: 'Possible Match Found',
           lostItem: l,
-          foundItem: f
+          foundItem: f,
+          contactItemId: f._id,
+          createdAt: new Date().toISOString()
         });
       }
     });

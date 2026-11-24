@@ -4,11 +4,13 @@
  */
 
 const api = async (url, options = {}) => {
+  const token = localStorage.getItem('portal_token');
   const response = await fetch(url, {
     credentials: 'include',
     ...options,
     headers: {
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(options.headers || {})
     }
   });
@@ -16,6 +18,24 @@ const api = async (url, options = {}) => {
   if (!response.ok) throw new Error(data.message || `Request failed (${response.status})`);
   return data;
 };
+
+const performLogout = async () => {
+  localStorage.removeItem('portal_token');
+  localStorage.removeItem('portal_user');
+  sessionStorage.clear();
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch (e) {}
+  location.replace('login.html');
+};
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#logoutButton, #logoutBtn').forEach(btn => {
+      btn.onclick = performLogout;
+    });
+  });
+}
 
 const STUDENT_EMAIL_DOMAIN = 'ced.alliance.edu.in';
 const isValidEmail = email => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(String(email || '').trim());
@@ -91,9 +111,7 @@ function updateHeaderUserStatus(user) {
       <a href="history.html" class="student-login">My Reports</a>
       <button class="admin-login" id="logoutButton" type="button">Logout</button>
     `;
-    document.getElementById('logoutButton')?.addEventListener('click', async () => {
-      try { await api('/api/auth/logout', { method: 'POST' }); } finally { location.replace('login.html'); }
-    });
+    document.getElementById('logoutButton')?.addEventListener('click', performLogout);
   } else {
     loginArea.innerHTML = `
       <a href="login.html" class="student-login">Student Login</a>
@@ -407,12 +425,18 @@ const register = async () => {
   }
 
   try {
-    await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+    const data = await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+    if (data.token) localStorage.setItem('portal_token', data.token);
+    if (data.user) localStorage.setItem('portal_user', JSON.stringify(data.user));
     messageBox(okBox, 'Account created successfully! Redirecting to login...');
-    setTimeout(() => location.assign('login.html'), 1200);
+    setTimeout(() => location.replace('login.html'), 700);
   } catch (e) {
-    if (errorBox) { errorBox.textContent = e.message; errorBox.classList.add('show'); }
-    else alert(e.message);
+    if (errorBox) {
+      errorBox.textContent = e.message || 'Email already registered, please log in';
+      errorBox.classList.add('show');
+    } else {
+      alert(e.message);
+    }
   }
 };
 if (document.getElementById('fullName')) window.registerUser = register;
@@ -434,9 +458,11 @@ if (loginForm) {
     if (!isStudentEmail(email)) return messageBox(box, 'Please use your Alliance student email (@ced.alliance.edu.in).', true);
 
     try {
-      await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      if (data.token) localStorage.setItem('portal_token', data.token);
+      if (data.user) localStorage.setItem('portal_user', JSON.stringify(data.user));
       messageBox(box, 'Sign in successful! Redirecting...', false);
-      setTimeout(() => location.assign('index.html'), 600);
+      location.replace('index.html');
     } catch (err) {
       messageBox(box, err.message, true);
     }
@@ -860,33 +886,155 @@ if (resultsBody) {
 
 // ---------------- AUTOMATED MATCHING ENGINE (MATCHES.HTML) ----------------
 function calculateItemMatch(lostItem, foundItem) {
-  let score = 0;
-  if (!lostItem || !foundItem) return 0;
+  if (!lostItem || !foundItem) return { score: 0, reasonText: '', reasons: [] };
 
-  // Category match
-  if (lostItem.category && foundItem.category && lostItem.category.toLowerCase() === foundItem.category.toLowerCase()) {
-    score += 40;
+  const reasons = [];
+  let score = 0;
+
+  // 1. Category comparison: (a) MUST MATCH
+  const catLost = String(lostItem.category || '').trim().toLowerCase();
+  const catFound = String(foundItem.category || '').trim().toLowerCase();
+
+  if (!catLost || !catFound || catLost !== catFound) {
+    return { score: 0, reasonText: '', reasons: [] };
   }
 
-  // Location match
-  if (lostItem.location && foundItem.location) {
-    const l1 = lostItem.location.toLowerCase();
-    const l2 = foundItem.location.toLowerCase();
-    if (l1 === l2 || l1.includes(l2) || l2.includes(l1)) {
+  score += 30;
+  reasons.push(`Same category (${lostItem.category || 'Item'})`);
+
+  // 2. Campus Location comparison: (c)
+  const locLost = String(lostItem.location || '').trim().toLowerCase();
+  const locFound = String(foundItem.location || '').trim().toLowerCase();
+
+  if (locLost && locFound) {
+    if (locLost === locFound) {
       score += 25;
+      reasons.push(`same location (${lostItem.location})`);
+    } else if (locLost.includes(locFound) || locFound.includes(locLost)) {
+      score += 18;
+      reasons.push(`matching location (${lostItem.location})`);
+    } else {
+      const lWords1 = locLost.split(/\s+/).filter(w => w.length > 3);
+      const lWords2 = locFound.split(/\s+/).filter(w => w.length > 3);
+      const commonLoc = lWords1.some(w => lWords2.includes(w));
+      if (commonLoc) {
+        score += 15;
+        reasons.push(`same campus area (${lostItem.location})`);
+      }
     }
   }
 
-  // Keyword similarity
-  const stopWords = new Set(['the', 'and', 'for', 'with', 'item', 'lost', 'found', 'near', 'left', 'room', 'block', 'floor', 'campus']);
-  const words1 = (lostItem.itemName + ' ' + (lostItem.description || '')).toLowerCase().split(/[\s,.-]+/).filter(w => w.length > 2 && !stopWords.has(w));
-  const words2 = (foundItem.itemName + ' ' + (foundItem.description || '')).toLowerCase().split(/[\s,.-]+/).filter(w => w.length > 2 && !stopWords.has(w));
-  const set2 = new Set(words2);
-  let matches = 0;
-  words1.forEach(w => { if (set2.has(w)) matches++; });
-  if (matches > 0) score += Math.min(35, matches * 15);
+  // 3. Color, Brand, & Distinctive Item Keywords: (b)
+  const textLost = `${lostItem.itemName || ''} ${lostItem.description || ''}`.toLowerCase();
+  const textFound = `${foundItem.itemName || ''} ${foundItem.description || ''}`.toLowerCase();
 
-  return Math.min(98, score);
+  const colors = [
+    'black', 'white', 'blue', 'red', 'silver', 'grey', 'gray', 'green', 
+    'yellow', 'gold', 'brown', 'pink', 'purple', 'orange', 'navy', 'beige', 'maroon'
+  ];
+  const brands = [
+    'boat', 'apple', 'samsung', 'dell', 'hp', 'lenovo', 'sony', 'asus', 
+    'acer', 'casio', 'fastrack', 'noise', 'titan', 'realme', 'redmi', 
+    'xiaomi', 'wildcraft', 'jbl', 'bose', 'logitech', 'zebronics', 'sandisk', 
+    'oneplus', 'faber-castell', 'faber castell'
+  ];
+
+  // Color check
+  const lostColors = colors.filter(c => new RegExp(`\\b${c}\\b`, 'i').test(textLost));
+  const foundColors = colors.filter(c => new RegExp(`\\b${c}\\b`, 'i').test(textFound));
+
+  if (lostColors.length > 0 && foundColors.length > 0) {
+    const matchedColor = lostColors.find(c => foundColors.includes(c));
+    if (matchedColor) {
+      score += 15;
+      const displayColor = matchedColor.charAt(0).toUpperCase() + matchedColor.slice(1);
+      reasons.push(`Similar color (${displayColor})`);
+    } else {
+      score -= 20; // Explicit color conflict penalty
+    }
+  }
+
+  // Brand check
+  const lostBrands = brands.filter(b => textLost.includes(b));
+  const foundBrands = brands.filter(b => textFound.includes(b));
+
+  if (lostBrands.length > 0 && foundBrands.length > 0) {
+    const matchedBrand = lostBrands.find(b => foundBrands.includes(b));
+    if (matchedBrand) {
+      score += 15;
+      const displayBrand = matchedBrand.toUpperCase();
+      reasons.push(`matching brand '${displayBrand}'`);
+    } else {
+      score -= 25; // Explicit brand conflict penalty
+    }
+  }
+
+  // Keyword check
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'item', 'lost', 'found', 'near', 'left', 
+    'room', 'block', 'floor', 'campus', 'alliance', 'university', 'please', 
+    'contact', 'student', 'table', 'desk', 'handover', 'help', 'area', 'side',
+    ...colors, ...brands
+  ]);
+
+  const extractTokens = (str) => {
+    return str.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.has(w));
+  };
+
+  const tokensLost = extractTokens(textLost);
+  const tokensFound = extractTokens(textFound);
+  const foundSet = new Set(tokensFound);
+
+  const matchedKeywords = Array.from(new Set(tokensLost.filter(t => foundSet.has(t))));
+  if (matchedKeywords.length > 0) {
+    const kwScore = Math.min(20, matchedKeywords.length * 8);
+    score += kwScore;
+    const topKws = matchedKeywords.slice(0, 2).map(k => `'${k.toUpperCase()}'`).join(' and ');
+    reasons.push(`matching keyword ${topKws}`);
+  }
+
+  // 4. Date Lost vs. Date Found: (d)
+  if (lostItem.date && foundItem.date) {
+    const tLost = new Date(lostItem.date).getTime();
+    const tFound = new Date(foundItem.date).getTime();
+
+    if (!isNaN(tLost) && !isNaN(tFound)) {
+      const diffMs = tFound - tLost;
+      const diffDays = Math.abs(diffMs) / 86400000;
+
+      if (diffDays <= 1) {
+        score += 15;
+        if (diffDays <= 0.4) {
+          reasons.push('same date');
+        } else {
+          reasons.push('within 1 day');
+        }
+      } else if (diffDays <= 3) {
+        score += 10;
+        reasons.push('within 3 days');
+      } else if (diffDays <= 7) {
+        score += 5;
+        reasons.push('within 1 week');
+      } else if (diffMs < -2 * 86400000) {
+        score -= 15;
+      }
+    }
+  }
+
+  score = Math.max(0, Math.min(95, Math.round(score)));
+
+  if (score < 60) {
+    return { score, reasonText: '', reasons: [] };
+  }
+
+  const reasonText = reasons.length > 0 
+    ? `Matched on: ${reasons.join(', ')}`
+    : `Matched on: Same category (${lostItem.category})`;
+
+  return { score, reasonText, reasons };
 }
 
 async function loadMatches() {
@@ -900,22 +1048,35 @@ async function loadMatches() {
   if (empty) empty.style.display = 'none';
 
   try {
-    let items = [];
-    const res = await api('/api/items').catch(() => null);
-    if (res && res.items) items = res.items;
+    let matchedPairs = [];
+    
+    // First attempt to get authoritative dynamic matches from server API
+    const matchRes = await api('/api/matches').catch(() => null);
+    if (matchRes && matchRes.matches && Array.isArray(matchRes.matches)) {
+      matchedPairs = matchRes.matches.map(m => ({
+        score: m.score,
+        reasonText: m.reasonText || (m.reasons ? `Matched on: ${m.reasons.join(', ')}` : `Matched on: Same category (${m.lostItem?.category || 'Item'})`),
+        lost: m.lostItem,
+        found: m.foundItem
+      }));
+    } else {
+      // Fallback: load items and calculate dynamically
+      let items = [];
+      const res = await api('/api/items').catch(() => null);
+      if (res && res.items) items = res.items;
 
-    const lostItems = items.filter(i => (i.type || '').toLowerCase() === 'lost' && i.status !== 'resolved');
-    const foundItems = items.filter(i => (i.type || '').toLowerCase() === 'found' && i.status !== 'resolved');
+      const lostItems = items.filter(i => (i.type || '').toLowerCase() === 'lost' && i.status !== 'resolved');
+      const foundItems = items.filter(i => (i.type || '').toLowerCase() === 'found' && i.status !== 'resolved');
 
-    const matchedPairs = [];
-    lostItems.forEach(l => {
-      foundItems.forEach(f => {
-        const score = calculateItemMatch(l, f);
-        if (score >= 50) {
-          matchedPairs.push({ score, lost: l, found: f });
-        }
+      lostItems.forEach(l => {
+        foundItems.forEach(f => {
+          const result = calculateItemMatch(l, f);
+          if (result.score >= 60) {
+            matchedPairs.push({ score: result.score, reasonText: result.reasonText, lost: l, found: f });
+          }
+        });
       });
-    });
+    }
 
     matchedPairs.sort((a, b) => b.score - a.score);
 
@@ -931,12 +1092,21 @@ async function loadMatches() {
         const card = document.createElement('article');
         card.className = 'match-card';
 
+        const reasonFormatted = pair.reasonText 
+          ? (pair.reasonText.startsWith('Matched on:') ? pair.reasonText : `Matched on: ${pair.reasonText}`)
+          : `Matched on: Same category (${esc(pair.lost.category)})`;
+
         card.innerHTML = `
-          <div class="match-heading">
-            <h2>Potential Lost &amp; Found Match</h2>
-            <span class="badge match-pct-badge" style="background:#eaf2fb;color:var(--primary);font-weight:700;padding:6px 14px;border-radius:20px;font-size:13px;border:1px solid #cbd5e1;">
-              ⚡ ${pair.score}% Match Confidence
-            </span>
+          <div class="match-heading" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;width:100%;flex-wrap:wrap;gap:10px;">
+              <h2 style="margin:0;">Potential Lost &amp; Found Match</h2>
+              <span class="badge match-pct-badge" style="background:#eaf2fb;color:var(--primary);font-weight:700;padding:6px 14px;border-radius:20px;font-size:13px;border:1px solid #cbd5e1;">
+                ⚡ ${pair.score}% Match Confidence
+              </span>
+            </div>
+            <div class="match-reason-badge" style="background:#f1f5f9;color:var(--primary);font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:6px;border-left:4px solid var(--primary);width:100%;box-sizing:border-box;">
+              🎯 <strong>${esc(reasonFormatted)}</strong>
+            </div>
           </div>
           <div class="match-items">
             <!-- LOST ITEM -->
@@ -1592,7 +1762,11 @@ if (adminForm) {
 
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
     sessionStorage.removeItem('admin_session_auth');
-    await api('/api/auth/logout', { method: 'POST' });
+    localStorage.removeItem('portal_token');
+    localStorage.removeItem('portal_user');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {}
     location.replace('admin.html');
   });
 

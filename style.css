@@ -505,6 +505,30 @@ input[type="file"] {
   background: var(--primary-light);
 }
 
+.auth-submit-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-submit-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(18, 59, 104, 0.25);
+}
+
 /* ================= TABLES ================= */
 .table-wrapper,
 .table-container {

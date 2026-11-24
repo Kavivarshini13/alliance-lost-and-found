@@ -416,17 +416,15 @@
                         <span>🗺️</span> Alliance University Central Campus (Anekal)
                     </strong>
                     <div class="map-view-toggle">
-                        <button type="button" id="btnStreetView" class="map-view-btn active">🗺️ Street Map</button>
-                        <button type="button" id="btnSatView" class="map-view-btn">🛰️ Satellite View</button>
-                        <button type="button" id="btnRefView" class="map-view-btn">📸 Reference Campus Map</button>
+                        <button type="button" id="btnRefView" class="map-view-btn active">📸 Campus Map</button>
                     </div>
                 </div>
 
-                <!-- Leaflet Interactive Map -->
-                <div id="campusMap" role="application" aria-label="OpenStreetMap view of Alliance University Central Campus"></div>
+                <!-- Leaflet Interactive Map (Fallback) -->
+                <div id="campusMap" role="application" aria-label="OpenStreetMap view of Alliance University Central Campus" style="display:none;"></div>
 
                 <!-- Alliance Reference Campus Map & Interactive Pin Overlay -->
-                <div id="referenceMapContainer" style="display:none;position:relative;width:100%;background:#090d16;overflow:hidden;border-bottom:1px solid var(--border-color);">
+                <div id="referenceMapContainer" style="display:block;position:relative;width:100%;background:#090d16;overflow:hidden;border-bottom:1px solid var(--border-color);">
                     <div style="position:relative;width:100%;max-width:100%;margin:0 auto;overflow:auto;">
                         <img id="referenceMapImg" src="alliance_campus_reference_map.jpg" alt="Alliance University Campus Reference Map" style="width:100%;height:auto;display:block;min-width:680px;">
                         <div id="referencePinsOverlay" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
