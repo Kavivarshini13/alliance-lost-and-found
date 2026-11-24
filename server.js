@@ -87,6 +87,8 @@ app.use(cookieParser());
 // ---------------- PORTAL ENTRY GATE (STUDENT LOGIN FIRST) ----------------
 const gatedPortalPages = new Set([
   '/',
+  '/capstone',
+  '/capstone/',
   '/index.html',
   '/search.html',
   '/lost.html',
@@ -98,6 +100,8 @@ const gatedPortalPages = new Set([
   '/item.html',
   '/dashboard.html'
 ]);
+
+app.get(['/capstone', '/capstone/'], (req, res) => res.redirect('/'));
 
 app.use((req, res, next) => {
   const reqPath = req.path.toLowerCase();
